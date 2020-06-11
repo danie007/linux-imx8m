@@ -44,10 +44,14 @@
 #define IMX_OCOTP_ADDR_TIMING		0x0010
 #define IMX_OCOTP_ADDR_DATA		0x0020
 
-#define IMX_OCOTP_BM_CTRL_ADDR		0x0000007F
+#define IMX_OCOTP_BM_CTRL_ADDR		0x000000FF
 #define IMX_OCOTP_BM_CTRL_BUSY		0x00000100
 #define IMX_OCOTP_BM_CTRL_ERROR		0x00000200
 #define IMX_OCOTP_BM_CTRL_REL_SHADOWS	0x00000400
+
+#define TIMING_STROBE_PROG_US       	10  /* Min time to blow a fuse */
+#define TIMING_STROBE_READ_NS       	37  /* Min time before read */
+#define TIMING_RELAX_NS         	17
 
 #define DEF_RELAX			20 /* > 16.5ns */
 #define IMX_OCOTP_WR_UNLOCK		0x3E770000
@@ -212,11 +216,17 @@ static int imx_ocotp_write(void *context, unsigned int offset, void *val,
 	 */
 	clk_rate = clk_get_rate(priv->clk);
 
-	relax = clk_rate / (1000000000 / DEF_RELAX) - 1;
-	strobe_prog = clk_rate / (1000000000 / 10000) + 2 * (DEF_RELAX + 1) - 1;
-	strobe_read = clk_rate / (1000000000 / 40) + 2 * (DEF_RELAX + 1) - 1;
+	relax = DIV_ROUND_UP(clk_rate * TIMING_RELAX_NS, 1000000000) - 1;
+	strobe_read = DIV_ROUND_UP(clk_rate * TIMING_STROBE_READ_NS,
+			1000000000);
+	strobe_read += 2 * (relax + 1) - 1;
+	strobe_prog = DIV_ROUND_CLOSEST(clk_rate * TIMING_STROBE_PROG_US,
+			1000000);
+	strobe_prog += 2 * (relax + 1) - 1;
 
-	timing = strobe_prog & 0x00000FFF;
+	timing = readl(priv->base + IMX_OCOTP_ADDR_TIMING) & 0x0FC00000;
+	timing |= strobe_prog & 0x00000FFF;
+
 	timing |= (relax       << 12) & 0x0000F000;
 	timing |= (strobe_read << 16) & 0x003F0000;
 
