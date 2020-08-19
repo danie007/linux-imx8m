@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  */
 
-#include "imx8mq-picoitx.dts"
+#include "imx8mq-itx-p-c444.dts"
 
 
 &irqsteer {
