@@ -140,11 +140,16 @@ static struct sn65dsi83 *bridge_to_sn65dsi83(struct drm_bridge *bridge)
     return container_of(bridge, struct sn65dsi83, bridge);
 }
 
+static void sn65dsi83_bridge_pre_enable(struct drm_bridge *bridge)
+{
+    struct sn65dsi83 *sn65dsi83 = bridge_to_sn65dsi83(bridge);
+    sn65dsi83->brg->funcs->setup(sn65dsi83->brg);
+}
+
 static void sn65dsi83_bridge_enable(struct drm_bridge *bridge)
 {
     struct sn65dsi83 *sn65dsi83 = bridge_to_sn65dsi83(bridge);
     dev_dbg(DRM_DEVICE(bridge),"%s\n",__func__);
-    sn65dsi83->brg->funcs->setup(sn65dsi83->brg);
     sn65dsi83->brg->funcs->start_stream(sn65dsi83->brg);
 }
 
@@ -196,6 +201,7 @@ static int sn65dsi83_bridge_attach(struct drm_bridge *bridge)
 }
 
 static struct drm_bridge_funcs sn65dsi83_bridge_funcs = {
+    .pre_enable = sn65dsi83_bridge_pre_enable,
     .enable = sn65dsi83_bridge_enable,
     .disable = sn65dsi83_bridge_disable,
     .mode_set = sn65dsi83_bridge_mode_set,
