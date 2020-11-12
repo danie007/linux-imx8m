@@ -57,27 +57,19 @@
 	resmem: reserved-memory {
 		#address-cells = <2>;
 		#size-cells = <2>;
-		ranges;
-
-		/* global autoconfigured region for contiguous allocations */
-		linux,cma {
-			compatible = "shared-dma-pool";
-			reusable;
-			size = <0 0x3c000000>;
-			alloc-ranges = <0 0x40000000 0 0x40000000>;
-			linux,cma-default;
-		};
+		/* cma region is provided by kernel command line as cma=<size>M */
+		/delete-node/ linux,cma;
 	};
 
 
 //	Uncomment if using mcp251x on spi
-	/*
+	
         can0_osc: can0_osc {
                 compatible = "fixed-clock";
                 #clock-cells = <0>;
                 clock-frequency  = <20000000>;
         };
-	*/
+	
 
         reg_usdhc2_vmmc: usdhc2_vmmc {
                 pinctrl-names = "default";
@@ -143,6 +135,11 @@
                         MX8MQ_IOMUXC_SAI5_RXC_GPIO3_IO20        0x19
                         /* USER LED */
                         MX8MQ_IOMUXC_SPDIF_RX_GPIO5_IO4         0x19
+                        MX8MQ_IOMUXC_GPIO1_IO10_GPIO1_IO10     0x19
+                        MX8MQ_IOMUXC_GPIO1_IO11_GPIO1_IO11     0x19
+                        MX8MQ_IOMUXC_GPIO1_IO14_GPIO1_IO14     0x19
+                        MX8MQ_IOMUXC_SAI1_TXC_GPIO4_IO11        0x19
+
                 >;
         };
 
@@ -468,7 +465,7 @@ spi: &ecspi1 {
         pinctrl-names = "default";
         pinctrl-0 = <&pinctrl_ecspi1>;
         status = "okay";
-	/*
+	
         can0: can@0 {
 		#address-cells = <1>;
                 #size-cells = <1>;
@@ -480,7 +477,7 @@ spi: &ecspi1 {
                 clocks = <&can0_osc>;
 		status = "okay";
         };
-	*/
+	
 	
 };
 
@@ -676,7 +673,8 @@ mini_pcie_intf: &pcie1{
                  <&clk IMX8MQ_CLK_PCIE2_AUX>,
                  <&clk IMX8MQ_CLK_PCIE2_PHY>,
                  <&pcie1_refclk>;
-        clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";        status = "okay";
+        clock-names = "pcie", "pcie_aux", "pcie_phy", "pcie_bus";
+        status = "okay";
 };
 
 &pgc_gpu {
